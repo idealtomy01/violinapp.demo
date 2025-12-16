@@ -1,65 +1,60 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen bg-[#0b0b0f] text-slate-100">
+      <div className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-16">
+        <header className="flex flex-col gap-4">
+          <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
+            Stradivarius Owners Hub
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+          <h1 className="text-3xl font-semibold leading-tight md:text-4xl">
+            富裕層向けの共同所有・ガバナンスを支える
+            <br />
+            プライベートダッシュボード
+          </h1>
+          <p className="max-w-3xl text-slate-300">
+            まずはメール認証だけで入室し、保有資産の可視化・投票・ドキュメント検証を
+            Web2中心で素早く提供。将来的なオンチェーンDAO運用へスムーズに拡張できます。
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild>
+              <Link href="/login">ログインへ</Link>
+            </Button>
+            <Button variant="secondary" asChild>
+              <Link href="/dashboard">ダッシュボードを見る（デモ）</Link>
+            </Button>
+          </div>
+        </header>
+
+        <section className="grid gap-4 md:grid-cols-3">
+          {[
+            {
+              title: "ガバナンス",
+              desc: "持分連動の加重投票。締切と結果をシンプルに表示。",
+            },
+            {
+              title: "真正性と透明性",
+              desc: "PDFのハッシュ照合とチェーンリンクで改ざん検知。",
+            },
+            {
+              title: "高級感あるUI",
+              desc: "余白と静かなモーションで落ち着いた体験を提供。",
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="rounded-xl border border-white/10 bg-white/5 p-5 shadow-lg shadow-black/20"
+            >
+              <p className="text-sm text-slate-400">{item.title}</p>
+              <h3 className="mt-2 text-lg font-semibold text-white">
+                {item.desc}
+              </h3>
+            </div>
+          ))}
+        </section>
+      </div>
+    </main>
   );
 }
