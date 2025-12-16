@@ -1,153 +1,186 @@
+import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { createClient } from "@/utils/supabase/server";
+import { notFound, redirect } from "next/navigation";
+import { ArrowLeft, MapPin, CheckCircle, FileText, Info } from "lucide-react";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-const documents = [
-  {
-    title: "鑑定書",
-    status: "検証済",
-    tx: "0xabcdef...1234",
-  },
-  {
-    title: "保険証券",
-    status: "未検証",
-    tx: null,
-  },
-];
+const formatCurrency = (amount: number | null) => {
+  if (!amount) return "---";
+  return new Intl.NumberFormat("ja-JP", {
+    style: "currency",
+    currency: "JPY",
+  }).format(amount);
+};
 
-export default function AssetDetailPage({ params }: Props) {
+export default async function AssetDetailPage({ params }: Props) {
+  // Next.js 16ではparamsがPromiseなのでawaitが必要
+  const { id } = await params;
+  
+  const supabase = await createClient();
+
+  // ログインチェック
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  // URLのIDを使ってデータを取得
+  const { data: asset, error } = await supabase
+    .from("assets")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !asset) {
+    notFound();
+  }
+
   return (
-    <main className="min-h-screen bg-[#0b0b0f] px-6 py-10 text-slate-100">
-      <div className="mx-auto flex max-w-5xl flex-col gap-8">
-        <header className="flex flex-col gap-2">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-            Ownership & Provenance
-          </p>
-          <h1 className="text-3xl font-semibold text-white">
-            資産詳細 #{params.id}
-          </h1>
-          <p className="text-sm text-slate-300">
-            スペック、保有割合、ドキュメント証跡、履歴を確認します。
-          </p>
-        </header>
+    <main className="min-h-screen bg-[#0b0b0f] text-slate-100 pb-20 md:pb-0">
+      {/* ヒーローエリア（画像背景） */}
+      <div className="relative h-[50vh] w-full bg-[#0b0b0f] overflow-hidden">
+        {asset.image_url ? (
+          <Image
+            src={asset.image_url}
+            alt={asset.name || "Asset image"}
+            fill
+            className="object-cover opacity-50"
+            unoptimized
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-white/10 via-white/5 to-white/10" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0f] via-[#0b0b0f]/50 to-transparent" />
 
-        <section className="grid gap-4 md:grid-cols-[2fr,1fr]">
-          <div className="space-y-4">
-            <div className="h-64 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-white/10" />
-            <div className="grid gap-3 md:grid-cols-2">
-              {[
-                { label: "製作年", value: "1715" },
-                { label: "製作者", value: "Antonio Stradivari" },
-                { label: "サイズ", value: "4/4" },
-                { label: "コンディション", value: "Excellent" },
-                { label: "現在地", value: "東京（保管）" },
-                { label: "貸与先", value: "ー" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-xl border border-white/5 bg-black/30 px-4 py-3"
-                >
-                  <p className="text-xs text-slate-400">{item.label}</p>
-                  <p className="text-sm font-semibold text-white">
-                    {item.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                保有情報
-              </p>
-              <div className="mt-3 space-y-2">
-                <div className="flex justify-between text-sm text-slate-200">
-                  <span>あなたの保有割合</span>
-                  <span className="font-semibold">22.5%</span>
-                </div>
-                <div className="flex justify-between text-sm text-slate-200">
-                  <span>票の重み</span>
-                  <span className="font-semibold">22.5</span>
-                </div>
-                <div className="flex justify-between text-sm text-slate-200">
-                  <span>評価額（推定）</span>
-                  <span className="font-semibold">¥180,000,000</span>
-                </div>
-              </div>
-              <Button className="mt-4 w-full">投票ページへ</Button>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    ドキュメント
-                  </p>
-                  <h3 className="text-lg font-semibold text-white">
-                    鑑定書・保険・契約
-                  </h3>
-                </div>
-                <Button variant="secondary" size="sm">
-                  一覧
-                </Button>
-              </div>
-              <div className="mt-4 space-y-3">
-                {documents.map((doc) => (
-                  <div
-                    key={doc.title}
-                    className="flex items-center justify-between rounded-xl border border-white/5 bg-black/30 px-3 py-3"
-                  >
-                    <div>
-                      <p className="text-sm text-white">{doc.title}</p>
-                      <p className="text-xs text-slate-400">
-                        {doc.tx ? "チェーン記録済" : "未記録"}
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs">
-                      {doc.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                履歴
-              </p>
-              <h3 className="text-lg font-semibold text-white">
-                保有推移・移転ログ
-              </h3>
-            </div>
-            <Button variant="secondary" size="sm">
-              すべて表示
-            </Button>
-          </div>
-          <div className="mt-4 space-y-3">
-            {[
-              "2024-12-01 所有割合を更新",
-              "2024-10-10 保管場所を東京に移動",
-              "2024-08-21 貸与終了、保管に戻す",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-lg border border-white/5 bg-black/30 px-3 py-3 text-sm text-slate-200"
+        <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 max-w-7xl mx-auto">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center text-slate-400 hover:text-white mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" /> ダッシュボードに戻る
+          </Link>
+          <div className="flex flex-wrap items-center gap-4 mb-4">
+            {asset.type && (
+              <Badge
+                variant="outline"
+                className="border-white/20 text-slate-300 px-3 py-1 bg-white/5"
               >
-                {item}
+                {asset.type}
+              </Badge>
+            )}
+            {asset.location && (
+              <div className="flex items-center text-slate-300 text-sm">
+                <MapPin className="w-4 h-4 mr-1" /> {asset.location}
               </div>
-            ))}
+            )}
           </div>
-        </section>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold mb-2 text-white">
+            {asset.name}
+          </h1>
+          {asset.maker && asset.production_year && (
+            <p className="text-lg md:text-xl text-slate-300">
+              {asset.maker} ({asset.production_year})
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* 詳細スペックエリア */}
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
+        {/* 左側：スペック情報 */}
+        <div className="lg:col-span-2 space-y-8 md:space-y-10">
+          <section>
+            <h2 className="text-xl font-semibold mb-4 flex items-center text-white">
+              <Info className="w-5 h-5 mr-2 text-slate-400" />
+              基本情報 (Specs)
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-xl border border-white/10 bg-white/5 p-6">
+              <div>
+                <p className="text-xs text-slate-400 mb-1">作者 (Maker)</p>
+                <p className="font-semibold text-lg text-white">
+                  {asset.maker || "---"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 mb-1">製作年 (Year)</p>
+                <p className="font-semibold text-lg text-white">
+                  {asset.production_year ? `${asset.production_year}年` : "---"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 mb-1">コンディション</p>
+                <p className="font-semibold text-lg text-white">
+                  {asset.condition || "---"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 mb-1">保管場所</p>
+                <p className="font-semibold text-lg text-white">
+                  {asset.location || "---"}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {asset.description && (
+            <section>
+              <h2 className="text-xl font-semibold mb-4 flex items-center text-white">
+                <FileText className="w-5 h-5 mr-2 text-slate-400" />
+                解説
+              </h2>
+              <p className="text-slate-300 leading-relaxed text-base md:text-lg whitespace-pre-wrap bg-white/5 rounded-xl border border-white/10 p-6">
+                {asset.description}
+              </p>
+            </section>
+          )}
+        </div>
+
+        {/* 右側：購入・保有パネル */}
+        <div className="space-y-6">
+          <div className="p-6 rounded-2xl border border-white/10 bg-white/5 sticky top-8">
+            <h3 className="text-lg font-semibold mb-6 text-white">現在の評価</h3>
+            <div className="mb-8">
+              <p className="text-xs text-slate-400 mb-1">市場評価額（推定）</p>
+              <p className="text-3xl md:text-4xl font-semibold text-white">
+                {formatCurrency(asset.current_value)}
+              </p>
+            </div>
+
+            <div className="space-y-4 pt-6 border-t border-white/10">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">総発行口数</span>
+                <span className="text-white">
+                  {asset.total_shares ? `${asset.total_shares} 口` : "---"}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">あなたの保有</span>
+                <span className="text-slate-200 font-semibold">
+                  10.0% (100口)
+                </span>
+              </div>
+            </div>
+
+            <Button className="w-full mt-8" asChild>
+              <Link href="/proposals">投票ページへ</Link>
+            </Button>
+
+            <div className="mt-4 flex justify-center">
+              <span className="text-xs text-slate-400 flex items-center">
+                <CheckCircle className="w-3 h-3 mr-1" /> Verified on Blockchain
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   );
 }
-
-
